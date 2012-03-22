@@ -248,6 +248,7 @@ public class RepRap5DDriver extends SerialDriver implements SerialFifoEventListe
 	public void updateManualControl()
 	{
 		try {
+			readTemperature();
 			extrusionUpdater.update();
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
@@ -1071,6 +1072,7 @@ public class RepRap5DDriver extends SerialDriver implements SerialFifoEventListe
 		}
 		else
 		{
+			Base.logger.info("enabling stepper");
 			extrusionUpdater.setDirection( machine.currentTool().getMotorDirection()==1?
 					Direction.forward : Direction.reverse );
 			extrusionUpdater.startExtruding();
@@ -1085,10 +1087,12 @@ public class RepRap5DDriver extends SerialDriver implements SerialFifoEventListe
 	public synchronized void enableMotor(long millis) throws RetryException {
 		if (fiveD == false)
 		{
+			Base.logger.info("enabling motor - fived = false");
 			super.enableMotor(millis);
 		}
 		else
 		{
+			Base.logger.info("enabling motor with fived");
 			super.enableMotor();
 			double feedrate = machine.currentTool().getMotorSpeedRPM();
 			double distance = millis * feedrate / 60 / 1000;
@@ -1098,6 +1102,27 @@ public class RepRap5DDriver extends SerialDriver implements SerialFifoEventListe
 			sendCommand(_getToolCode() + "G1 E" + (ePosition.get() + distance) + " F" + feedrate);
 			super.disableMotor();
 		}
+	}
+
+
+	public void enableMotor(long millis, int toolhead) throws RetryException {
+                if (fiveD == false)
+                {
+                        Base.logger.info("enabling motor - fived = false");
+                        super.enableMotor(millis);
+                }
+                else
+                {
+                        Base.logger.info("enabling motor with fived");
+                        super.enableMotor();
+                        double feedrate = machine.currentTool().getMotorSpeedRPM();
+                        double distance = millis * feedrate / 60 / 1000;
+                        if (machine.currentTool().getMotorDirection() != 1) {
+                                distance *= -1;
+                        }
+                        sendCommand("T"+ toolhead+ " "+ "G1 E" + (ePosition.get() + distance) + " F" + feedrate);
+                        super.disableMotor();
+                }		
 	}
 
 	public void disableMotor() throws RetryException {
@@ -1112,6 +1137,7 @@ public class RepRap5DDriver extends SerialDriver implements SerialFifoEventListe
 
 		super.disableMotor();
 	}
+
 
 	/***************************************************************************
 	 * Spindle interface functions
@@ -1150,6 +1176,12 @@ public class RepRap5DDriver extends SerialDriver implements SerialFifoEventListe
 		sendCommand(_getToolCode() + "M104 S" + df.format(temperature));
 
 		super.setTemperature(temperature);
+	}
+
+	public void setTemperature(double temperature, int toolIndex) throws RetryException {
+		sendCommand("T"+toolIndex+" " + "M104 S" + df.format(temperature));
+
+		super.setTemperature(temperature, toolIndex);	
 	}
 
 	public void readTemperature() {

@@ -688,6 +688,7 @@ public class ExtruderPanel extends JPanel{
 		// Some changes to the way (& frequency) temperatures are read make it easier
 		// to just read this cached value which will be updated regularly
 		if (tool0 != null) {
+//			Base.logger.warning("updating temperature...");
 			t0CurrentTemperatureField.setValue(tool0.getCurrentTemperature());
 			t0MeasuredDataset.add(second, tool0.getCurrentTemperature(),"a");
 			t0TargetDataset.add(second, t0TargetTemperature,"a");
@@ -772,12 +773,14 @@ public class ExtruderPanel extends JPanel{
 				if (newValue == Double.MIN_VALUE) {
 					return;
 				}
+	//			Base.logger.warning("setting tool temperature" + toolhead + " - " + newValue);
 				machine.runCommand(new replicatorg.drivers.commands.SetTemperature(newValue, toolhead));
 			} else { // platform
 				newValue = confirmTemperature(newValue,"temperature.acceptedLimit.bed",130.0);
 				if (newValue == Double.MIN_VALUE) {
 					return;
 				}
+	//			Base.logger.warning("setting extruder temperature" + newValue);
 				machine.runCommand(new replicatorg.drivers.commands.SetPlatformTemperature(newValue, toolhead));
 			}
 		}
@@ -843,9 +846,11 @@ public class ExtruderPanel extends JPanel{
 		if (actionName.equals("forward")) {
 
 			if (tool.getMotorStepperAxisName() != "") {
+//				Base.logger.info("forward command");
 				machine.runCommand(new replicatorg.drivers.commands.SetMotorDirection(AxialDirection.CLOCKWISE,toolhead));
 				// Reverted to one single command for RepRap5D driver
 				if (machine.getDriver().getDriverName().equals("RepRap5D")) {
+//					Base.logger.info("sending EnableExtruderMotor");
 					machine.runCommand(new replicatorg.drivers.commands.EnableExtruderMotor(extrudeTime*1000,toolhead));
 				} else {
 					// See Note (***) Below:

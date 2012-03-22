@@ -104,6 +104,7 @@ public class ExtrusionUpdater {
 		 * keep the command queue full. */
 		if(isExtruding.get() == true)
 		{
+			Base.logger.info("is extruding...");
 			long currentTime = System.currentTimeMillis();
 			if (extrudeQueueEnd > currentTime + maxQueuedExtrudeTime)
 			{
