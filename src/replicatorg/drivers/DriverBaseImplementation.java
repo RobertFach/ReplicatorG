@@ -372,7 +372,7 @@ public class DriverBaseImplementation implements Driver, DriverQueryInterface{
 		// faster than it's maximum feedrate, lower the system feedrate so
 		// that it will be compliant.
 		for (int i=0;i<5;i++) {
-			if (delta.get(i) != 0) {
+			if (delta.get(i) != 0 && maxFeedrates.get(i) != 0) {
 				if (feedrate * delta.get(i) / length > maxFeedrates.get(i)) {
 					feedrate = maxFeedrates.get(i) * length / delta.get(i);
 				}
