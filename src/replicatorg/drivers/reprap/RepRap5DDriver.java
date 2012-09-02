@@ -1327,12 +1327,6 @@ public class RepRap5DDriver extends SerialDriver implements SerialFifoEventListe
 		}
 	}
 
-	public void setTemperature(double temperature, int toolIndex) throws RetryException {
-		sendCommand("T"+toolIndex+" " + "M104 S" + df.format(temperature));
-
-		super.setTemperature(temperature, toolIndex);	
-	}
-
 	public void readTemperature() {
 		readAllTemperatures(); /// for safety, read all the temps we can
 		/*
