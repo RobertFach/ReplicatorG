@@ -1,5 +1,22 @@
+0038-Beta ReplicatorG
+* bugfix for commiting onboard preferences to Replicator(Single Extruder)
+* bugfix for commiting oboard preferences to Thing-O-Matic
+
+0037-Beta ReplicatorG
+* bugfix for comb in skeinforge
+* lowered The Replicator:Accelerated temperature
+* changed start gcode to handle firmware 5.5 stepper power bugfix
+
+0036-Beta ReplicatorG
+* Updated for acceleration behavior
+* Updated to have temperature as part of PrintOMatic settings
+* Updated for smarter acceleration related configuration
+* Added Slic3r and Miracle Grue engines, engine editors, etc
+
+0035-Beta ReplicatorG
+* Updated to handle accleration for The Replicator
 0034-Beta ReplicatorG
- * Updated t0 to t1 tolerance code 
+* Updated t0 to t1 tolerance code 
 
 0033 ReplicatorG
 * Updated version number to avoid confusion

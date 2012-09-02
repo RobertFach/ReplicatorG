@@ -68,7 +68,7 @@ public class DriverBaseImplementation implements Driver, DriverQueryInterface{
 	ConcurrentLinkedQueue<DriverError> errorList;
 
 	// how fast are we moving in mm/minute
-	private double currentFeedrate;
+	private double currentFeedrateMM;
 
 	// what is our mode of positioning?
 	protected int positioningMode = 0;
@@ -202,6 +202,11 @@ public class DriverBaseImplementation implements Driver, DriverQueryInterface{
 	 * Firmware information functions
 	 **************************************************************************/
 
+	public void setFirmwareName(String firmware)
+	{
+		firmwareName = firmware;
+	}
+	
 	public String getFirmwareInfo() {
 		return firmwareName + " v" + getVersion();
 	}
@@ -330,15 +335,15 @@ public class DriverBaseImplementation implements Driver, DriverQueryInterface{
 	/**
 	 * sets the feedrate in mm/minute
 	 */
-	public void setFeedrate(double feed) {
-		currentFeedrate = feed;
+	public void setFeedrateMM(double feed) {
+		currentFeedrateMM = feed;
 	}
 
 	/**
 	 * gets the feedrate in mm/minute
 	 */
 	public double getCurrentFeedrate() {
-		return currentFeedrate;
+		return currentFeedrateMM;
 	}
 
 	/**
@@ -926,13 +931,17 @@ public class DriverBaseImplementation implements Driver, DriverQueryInterface{
 	@Override
 	public void readAllTemperatures() {
 		// TODO Auto-generated method stub
-		
 	}
 
 	@Override
 	public void readAllPlatformTemperatures() {
 		// TODO Auto-generated method stub
-		
+	}
+	
+	@Override
+	//// get machine or situation specific configs
+	public String getConfigValue(String value, String baseline) {
+		return baseline;
 	}
 
 
