@@ -46,12 +46,26 @@ public class OnboardParametersWindow extends JFrame {
 		onboardParamsTab = new MachineOnboardParameters(targetParams, driver, (JFrame)this);
 		paramsTabs.addTab("Motherboard", onboardParamsTab);
 		
-		List<ToolModel> tools = driver.getMachine().getTools();
-		
-		for(ToolModel t : tools)
+		String machineType = targetParams.getMachineType();
+
+    // we're removing the toolhead panel for the replicator because it doesn't work and it works in makerware.
+    // if you want to use it, fix it and we'll put in a patch
+		//if(!(machineType.equals("The Replicator") || machineType.equals("Replicator 2") ||
+    //     machineType.equals("MightyBoard") || machineType.equals("MightyBoard(unverified)"))){
+      List<ToolModel> tools = driver.getMachine().getTools();
+      
+      for(ToolModel t : tools)
+      {
+        paramsTabs.addTab("Extruder " + t.getIndex(), new ExtruderOnboardParameters(targetParams, t,(JFrame)this));
+      }
+   // }		
+		/*String machineType = targetParams.getMachineType();
+		if((machineType.equals("MightyBoard") || 
+			machineType.equals("The Replicator") || 
+			machineType.equals("MightyBoard(unverified)")))
 		{
-			paramsTabs.addTab("Extruder " + t.getIndex(), new ExtruderOnboardParameters(targetParams, t,(JFrame)this));
-		}
+			paramsTabs.addTab("Bot Settings", new BotParameters());
+		}*/
 
 		JLabel verifyString = new JLabel("Warning: Machine Type is not verifiable.");
 		verifyString.setToolTipText("this machine has no way to verify the EEPORM is a valid layout");
@@ -85,9 +99,11 @@ public class OnboardParametersWindow extends JFrame {
 	public void dispose()
 	{
 		this.disconnectOnExit = onboardParamsTab.disconnectOnExit();	
+		boolean leavePreheatRunning = onboardParamsTab.leavePreheatRunning();
 		if(mainwin != null && this.disconnectOnExit){
-			//leave pre-heat, we expect users to reconnect;
-			mainwin.handleDisconnect(/*leavePreheatRunning*/true, /*dispose machine model*/true); 
+			//REPLICATOR: leave pre-heat, we expect users to reconnect;
+			//ToM, Cupcake: keep behavior unchanged, do not start pre-heat
+			mainwin.handleDisconnect(leavePreheatRunning, /*dispose machine model*/true); 
 		}
 		super.dispose();
 	}

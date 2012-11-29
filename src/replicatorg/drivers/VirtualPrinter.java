@@ -21,7 +21,9 @@ public class VirtualPrinter implements Driver, DriverQueryInterface {
 	final Version version = new Version(0,0);
 	final Version minimumVersion = new Version(0,0);
 	final Version preferredVersion = new Version(0,0);
-        final Version minimumAccelerationVersion = new Version(0,0);
+  final Version minimumAccelerationVersion = new Version(0,0);
+  final Version minimumJettyAccelerationVersion = new Version(0,0);
+  final Version minAdvancedFeatureVersion = new Version(0,0);
 	final boolean hasSoftStop = true;	
 	final boolean hasEStop = true;
 	
@@ -161,12 +163,24 @@ public class VirtualPrinter implements Driver, DriverQueryInterface {
 		return minimumAccelerationVersion;
 	}
 
+        @Override
+	public Version getMinimumJettyAccelerationVersion() {
+		// TODO Auto-generated method stub
+		return minimumJettyAccelerationVersion;
+	}
+
+        @Override
+	public Version getMinimumAdvancedFeatureVersion() {
+		// TODO Auto-generated method stub
+		return minAdvancedFeatureVersion;
+	}
+
 	@Override
 	public Version getPreferredVersion() {
 		// TODO Auto-generated method stub
 		return preferredVersion;
 	}
-
+	
 	@Override
 	public void setCurrentPosition(Point5d p) throws RetryException {
 		currentPosition = p;
@@ -233,12 +247,21 @@ public class VirtualPrinter implements Driver, DriverQueryInterface {
 	}
 
 	@Override
+	public int getBuildToFileVersion() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+	@Override
+	public void setBuildToFileVersion(int version){
+	}
+
+	@Override
 	public Point5d getPosition() {
 		// TODO Auto-generated method stub
 		return currentPosition;
 	}
 
-	@Override
+	
 	public void requestToolChange(int toolIndex, int timeout)
 			throws RetryException {
 		// TODO Auto-generated method stub
@@ -261,6 +284,12 @@ public class VirtualPrinter implements Driver, DriverQueryInterface {
 	public double getCurrentFeedrate() {
 		// TODO Auto-generated method stub
 		return 0;
+	}
+
+	@Override
+	public void setAccelerationToggle(boolean on)
+			throws RetryException {
+		// TODO Auto-generated method stub
 	}
 
 	@Override

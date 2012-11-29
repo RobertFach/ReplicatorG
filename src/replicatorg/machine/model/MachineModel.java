@@ -130,7 +130,7 @@ public class MachineModel
 		parseWipes();
 		parseExclusion();
 		parseGCode();
-                parseOffsets();
+		parseOffsets();
 	}
 	
 
@@ -142,6 +142,8 @@ public class MachineModel
 
 			if (kid.getNodeName().equals("name")) {
 				String name = kid.getFirstChild().getNodeValue().trim();
+				if(name.startsWith("Replicator 2"))
+					machineType = MachineType.REPLICATOR_2;
 				if(name.startsWith("The Replicator"))
 					machineType = MachineType.THE_REPLICATOR;
 				else if(name.startsWith("Thingomatic"))
@@ -426,7 +428,7 @@ public class MachineModel
 			Node bookend = XML.getChildNodeByName(xml, "bookend");
 			String dualstartLocation = XML.getAttributeValue(bookend, "dualstart");
 			String startLocation = XML.getAttributeValue(bookend, "start");
-			String endLocation = XML.getAttributeValue(bookend, "end");
+			String endLocation = XML.getAttributeValue(bookend, "end");			
 			if(dualstartLocation != null) 
 				dualstartBookendCode = Base.getApplicationFile(dualstartLocation);
 			if(startLocation != null) 
@@ -468,6 +470,11 @@ public class MachineModel
 	 * Get steps-mm conversion value
 	 */
 	public Point5d getStepsPerMM() { return stepsPerMM; }
+
+	/**
+	 * Get axis lengths
+	 */
+	public Point5d getAxisLengths() { return maximum; }
         
         /**
 	 * Get steps-mm conversion value

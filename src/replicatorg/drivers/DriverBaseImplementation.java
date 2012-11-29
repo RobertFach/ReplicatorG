@@ -56,13 +56,17 @@ public class DriverBaseImplementation implements Driver, DriverQueryInterface{
 	protected Version version = new Version(0,0);
 	protected Version preferredVersion = new Version(0,0);
 	protected Version minimumVersion = new Version(0,0);
-        protected Version minimumAccelerationVersion = new Version(0,0);
+  protected Version minimumAccelerationVersion = new Version(0,0);
+  protected Version minimumJettyAccelerationVersion = new Version(0,0);
+  protected Version minAdvancedFeatureVersion = new Version(0,0);    
 	
 	// our point offsets
-	private Point3d[] offsets;
+	protected Point3d[] offsets;
 
 	// are we initialized?
 	private AtomicBoolean isInitialized = new AtomicBoolean(false);
+
+	private int buildToFileVersion = 0;
 
 	// our error variable.
 	ConcurrentLinkedQueue<DriverError> errorList;
@@ -224,12 +228,32 @@ public class DriverBaseImplementation implements Driver, DriverQueryInterface{
 	public Version getMinimumVersion() {
 		return minimumVersion;
 	}
-        public Version getMinimumAccelerationVersion(){
-                return minimumAccelerationVersion;
-        }
-	
+
+  public Version getMinimumAccelerationVersion(){
+          return minimumAccelerationVersion;
+  }
+
+  public Version getMinimumJettyAccelerationVersion(){
+          return minimumJettyAccelerationVersion;
+  }
+
+  public Version getMinimumAdvancedFeatureVersion(){
+          return minAdvancedFeatureVersion;
+  }
 	public Version getPreferredVersion() {
 		return preferredVersion;
+	}
+
+	//Return s3g/x3g version (3 or 4)
+	//Set when build is called, if value = 0
+	//No version has been set(not saving to file)
+	public int getBuildToFileVersion() {
+		return buildToFileVersion;
+	}
+
+	//Sets verision s3g/x3g (3 or 4)
+	public void setBuildToFileVersion(int version){
+		buildToFileVersion = version;
 	}
 
 	/***************************************************************************
@@ -372,7 +396,6 @@ public class DriverBaseImplementation implements Driver, DriverQueryInterface{
 
 		// Determine the magnitude of this delta
 		double length = delta.length();
-		
 		// For each axis: if the current feedrate will cause this axis to move
 		// faster than it's maximum feedrate, lower the system feedrate so
 		// that it will be compliant.
@@ -383,7 +406,6 @@ public class DriverBaseImplementation implements Driver, DriverQueryInterface{
 				}
 			}
 		}
-		
 		// Return the feedrate, which is how fast the toolhead will be moving (magnitude of the toolhead velocity)
 		return feedrate;
 	}
@@ -426,6 +448,14 @@ public class DriverBaseImplementation implements Driver, DriverQueryInterface{
 
 	public void selectTool(int toolIndex) throws RetryException {
 		machine.selectTool(toolIndex);
+	}
+	
+	/***************************************************************************
+	 * Acceleration interface functions
+	 * @throws RetryException 
+	 **************************************************************************/
+
+	public void setAccelerationToggle(boolean on) throws RetryException {
 	}
 
 	/***************************************************************************

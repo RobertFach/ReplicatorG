@@ -45,6 +45,8 @@ import java.awt.Toolkit;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -125,6 +127,7 @@ import replicatorg.app.util.StreamLoggerThread;
 import replicatorg.app.util.SwingPythonSelector;
 import replicatorg.app.util.serial.Name;
 import replicatorg.app.util.serial.Serial;
+import replicatorg.drivers.Driver;
 import replicatorg.drivers.EstimationDriver;
 import replicatorg.drivers.MultiTool;
 import replicatorg.drivers.OnboardParameters;
@@ -639,7 +642,9 @@ ToolpathGenerator.GeneratorListener
 			spp.setStartCode(new MutableGCodeSource(machineLoader.getMachineInterface().getModel().getStartBookendCode()));
 			spp.setEndCode(new MutableGCodeSource(machineLoader.getMachineInterface().getModel().getEndBookendCode()));
 			spp.setMultiHead(isDualDriver());
-			if(machineLoader.getMachineInterface().getMachineType() == MachineType.THE_REPLICATOR)
+			if((machineLoader.getMachineInterface().getMachineType() == MachineType.THE_REPLICATOR) ||
+            (machineLoader.getMachineInterface().getMachineType() == MachineType.REPLICATOR_2) ||
+            (machineLoader.getDriver().getDriverName().equals("Makerbot4GSailfish")))
 				spp.setAddProgressUpdates(true);
 		}
 		else if (generator instanceof MiracleGrueGenerator) {
@@ -652,7 +657,9 @@ ToolpathGenerator.GeneratorListener
 			spp.setMultiHead(isDualDriver());
 			spp.setPrependStart(true);
 			spp.setAppendEnd(true);
-			if(machineLoader.getMachineInterface().getMachineType() == MachineType.THE_REPLICATOR)
+			if((machineLoader.getMachineInterface().getMachineType() == MachineType.THE_REPLICATOR) ||
+            (machineLoader.getMachineInterface().getMachineType() == MachineType.REPLICATOR_2) ||
+            (machineLoader.getDriver().getDriverName().equals("Makerbot4GSailfish")))
 				spp.setAddProgressUpdates(true);
 
 		}
@@ -1361,21 +1368,23 @@ ToolpathGenerator.GeneratorListener
 		{
 			if(preheatMachine)
 			{
-				tool0Target = Base.preferences.getInt("build.preheatTool0", 75);
-				platTarget = Base.preferences.getInt("build.preheatPlatform", 75);
-				if(isDualDriver())
-					tool1Target = Base.preferences.getInt("build.preheatTool1", 75);
+					tool0Target = Base.preferences.getInt("build.preheatTool0", 75);
+					platTarget = Base.preferences.getInt("build.preheatPlatform", 75);
+					if(isDualDriver())
+						tool1Target = Base.preferences.getInt("build.preheatTool1", 75);
 			}
 			machine.runCommand(new replicatorg.drivers.commands.SelectTool(0)); /// for paranoia to get the right tool
 			machine.runCommand(new replicatorg.drivers.commands.SetTemperature(tool0Target,0));
 			machine.runCommand(new replicatorg.drivers.commands.SetPlatformTemperature(platTarget,0));
 			if(isDualDriver())
 			{
-				machine.runCommand(new replicatorg.drivers.commands.SelectTool(1)); /// for paranoia to get the right tool
-				machine.runCommand(new replicatorg.drivers.commands.SetTemperature(tool1Target,1));
+					machine.runCommand(new replicatorg.drivers.commands.SelectTool(1)); /// for paranoia to get the right tool
+					machine.runCommand(new replicatorg.drivers.commands.SetTemperature(tool1Target,1));
 			}
 		}
+			
 	}
+
 
 	protected void handleToolheadIndexing() {
 		if (!(machineLoader.getDriver() instanceof MultiTool)) {
@@ -1442,7 +1451,10 @@ ToolpathGenerator.GeneratorListener
 				Base.logger.fine("no valid machine for " + mname);
 				return false; //assume it's a single extruder
 			}
-			System.out.println(machineInter.getModel().getTools().size());
+			
+			//HEREHERE
+			
+			System.out.println("test" + machineInter.getModel().getTools().size());
 			if( machineInter.getModel().getTools().size() == 2 ) {
 				return true;
 			}
@@ -1870,7 +1882,8 @@ ToolpathGenerator.GeneratorListener
 				return;
 			}
 		}
-		doPreheat(leavePreheatRunning);
+		//HEREHERE
+		//doPreheat(leavePreheatRunning);
 		machineLoader.disconnect();
 		if(clearMLSingleton) /// this causes the singleton to reload (so post-eeprom-reset/write bots reload data)
 			machineLoader.clearSingleton();
@@ -2125,6 +2138,9 @@ ToolpathGenerator.GeneratorListener
 		if(buildFlag == BuildFlag.NONE) {
 			return; //exit ro cancel clicked
 		}
+
+		machineLoader.getDriver().setBuildToFileVersion(0);
+
 		if(buildFlag == BuildFlag.GEN_AND_BUILD) {
 			//'rewrite' clicked
 			buildOnComplete = true;
@@ -2230,7 +2246,22 @@ ToolpathGenerator.GeneratorListener
 		public String getDescription() {
 			return description;
 		}
+
+		public String getFirstExtension() {
+			return extensions.getFirst();
+		}
 	};
+
+	private String getExtension(String s) {
+		String extension = null;
+
+		int pos = s.lastIndexOf('.');
+		
+		if ( pos > 0 && pos < (s.length() - 1))
+			extension = s.substring(pos).toLowerCase();
+		
+		return extension;
+	}
 
 	private String selectOutputFile(String defaultName) {
 		File directory = null;
@@ -2238,25 +2269,71 @@ ToolpathGenerator.GeneratorListener
 		if (loadDir != null) {
 			directory = new File(loadDir);
 		}
-		JFileChooser fc;
+
+		final JFileChooser fc;
 		if (directory != null) {
 			fc = new JFileChooser(directory);
 		}
 		else {
 			fc = new JFileChooser();
 		}
+		fc.setAcceptAllFileFilterUsed(false);
 
-		fc.setFileFilter(new ExtensionFilter(".s3g","Makerbot build file"));
+    ExtensionFilter s3gFilter;
+    ExtensionFilter x3gFilter;
+
+    if ((machineLoader.getMachineInterface().getMachineType() == MachineType.THE_REPLICATOR) || (machineLoader.getMachineInterface().getMachineType() == MachineType.REPLICATOR_2)){
+      s3gFilter = new ExtensionFilter(".s3g"," .s3g  (For use with firmware earlier than v7.0)");
+      x3gFilter = new ExtensionFilter(".x3g"," .x3g  (For use with firmware v7.0 or later)");
+    }
+    else{
+      s3gFilter = new ExtensionFilter(".s3g"," .s3g  (For use with firmware v3.5 or earlier)");
+      x3gFilter = new ExtensionFilter(".x3g"," .x3g  (For use with firmware v4.1 or later)");
+    } 
+		fc.addChoosableFileFilter(s3gFilter);
+		fc.addChoosableFileFilter(x3gFilter);
+		if(((OnboardParameters)machineLoader.getDriver()).hasJettyAcceleration() ||
+			(machineLoader.getDriver().getBuildToFileVersion() >= 4) ){
+			fc.setFileFilter(x3gFilter);
+		}
+		else{
+			fc.setFileFilter(s3gFilter);
+		}
+
 		fc.setDialogTitle("Save Makerbot build as...");
 		fc.setDialogType(JFileChooser.SAVE_DIALOG);
 		fc.setFileHidingEnabled(false);
 		fc.setSelectedFile(new File(directory,defaultName));
+
 		int rv = fc.showSaveDialog(this);
 		if (rv == JFileChooser.APPROVE_OPTION) {
-			fc.getSelectedFile().getName();
-			Base.preferences.put("ui.open_output_dir",fc.getCurrentDirectory().getAbsolutePath());
-			return fc.getSelectedFile().getAbsolutePath();
-		} else {
+			
+			//Changes the file name to have s3g/x3g extensions and checks if that is
+			//what the user selected
+
+			File currentFile = fc.getSelectedFile();
+			FileFilter filter = fc.getFileFilter();
+			File newFile = new File(currentFile.getAbsolutePath() + ".s3g");
+			if(filter.accept(newFile))
+			{
+				System.out.println("\n############s3g");
+				Base.preferences.put("ui.open_output_dir",fc.getCurrentDirectory().
+					getAbsolutePath());
+				return newFile.getAbsolutePath();
+			}
+
+			newFile = new File(currentFile.getAbsolutePath() + ".x3g");
+
+			if(filter.accept(newFile))
+			{
+				System.out.println("\n############x3g");
+				Base.preferences.put("ui.open_output_dir",fc.getCurrentDirectory().
+					getAbsolutePath());
+				return newFile.getAbsolutePath();
+			}
+			return null;
+		}
+		else {
 			return null;
 		}
 	}
@@ -2278,9 +2355,27 @@ ToolpathGenerator.GeneratorListener
 			return;
 		}
 
-		String sourceName = build.getName() + ".s3g";
+   	String sourceName;
+		System.out.println("\n######:" + machineLoader.getDriver());
+
+		sourceName = build.getName();
+
+		final String sXgVersion_pref = "replicatorg.last.choosen.sxg.format";
+
 		String path = selectOutputFile(sourceName);
+		System.out.println("\n#####:" + path);
+
+		String extension = getExtension(path);
+
 		if (path != null) {
+			//Save prferences for sXg format
+			if(getExtension(path).equals(".x3g"))
+				Base.preferences.putInt(sXgVersion_pref,4);
+			else if(getExtension(path).equals(".s3g"))
+				Base.preferences.putInt(sXgVersion_pref, 3);
+			else
+				Base.preferences.putInt(sXgVersion_pref,3);
+
 			// build specific stuff
 			building = true;
 			//buttons.activate(MainButtonPanel.BUILD);
@@ -2289,6 +2384,7 @@ ToolpathGenerator.GeneratorListener
 
 			// start our building thread.
 			buildStart = new Date();
+			machineLoader.getDriver().setBuildToFileVersion((getExtension(path).equals(".x3g")) ? 4 : 3);
 			machineLoader.getMachineInterface().buildToFile(new JEditTextAreaSource(textarea), path);
 		}
 	}
@@ -2675,7 +2771,7 @@ ToolpathGenerator.GeneratorListener
 	 */
 	public void doPause() {
 		if (machineLoader.getMachineInterface().isPaused()) {
-			machineLoader.getMachineInterface().unpause();
+			machineLoader.getMachineInterface().getDriver().unpause();
 
 			if (simulating) {
 				message("Simulating...");
@@ -2685,11 +2781,10 @@ ToolpathGenerator.GeneratorListener
 
 			//buttons.inactivate(MainButtonPanel.PAUSE);
 		} else {
-			machineLoader.getMachineInterface().pause();
+			machineLoader.getMachineInterface().getDriver().pause();
 			int atWhichLine = machineLoader.getMachineInterface().getLinesProcessed();
 			highlightLine(atWhichLine);
 			message("Paused at line "+ atWhichLine +".");
-
 			//buttons.clear();
 			//buttons.activate(MainButtonPanel.PAUSE);
 		}
