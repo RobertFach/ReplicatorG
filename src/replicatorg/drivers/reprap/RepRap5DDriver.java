@@ -812,6 +812,12 @@ public class RepRap5DDriver extends SerialDriver implements SerialFifoEventListe
 					throw new BadFirmwareVersionException(version,preferredVersion);
 				}
 			}
+			else if (line.startsWith("firmware_name:marlin")) { //Marlin version fix
+				Base.logger.fine("Detected Marlin Firmware");
+				Base.logger.fine(line);
+				setFirmwareName("Marlin");
+
+			}	
 			else if (line.startsWith("echo"))
 			{
 				//Do nothing
