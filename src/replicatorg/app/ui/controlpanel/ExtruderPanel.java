@@ -164,6 +164,7 @@ public class ExtruderPanel extends JPanel{
 		axis.setTickLabelsVisible(false); // We don't need to see the millisecond count
 		axis = plot.getRangeAxis();
 		axis.setRange(0,300); // set termperature range from 0 to 300 degrees C so you can see overshoots 
+		axis.setAutoRange(true); //automatically adjust range for temperature readings
 		// Tweak L&F of chart
 		//((XYAreaRenderer)plot.getRenderer()).setOutline(true);
 		XYStepRenderer renderer = new XYStepRenderer();
